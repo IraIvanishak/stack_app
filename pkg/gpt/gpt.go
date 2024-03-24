@@ -36,9 +36,43 @@ type Payload struct {
 	FunctionCall string        `json:"function_call"`
 }
 
+type Response struct {
+	ID                string   `json:"id"`
+	Object            string   `json:"object"`
+	Created           int64    `json:"created"`
+	Model             string   `json:"model"`
+	Choices           []Choice `json:"choices"`
+	Usage             Usage    `json:"usage"`
+	SystemFingerprint string   `json:"system_fingerprint"`
+}
+
+type Choice struct {
+	Index        int           `json:"index"`
+	Message      ChoiceMessage `json:"message"`
+	Logprobs     interface{}   `json:"logprobs"`
+	FinishReason string        `json:"finish_reason"`
+}
+
+type ChoiceMessage struct {
+	Role         string       `json:"role"`
+	Content      string       `json:"content"`
+	FunctionCall FunctionCall `json:"function_call"`
+}
+
+type FunctionCall struct {
+	Name      string `json:"name"`
+	Arguments string `json:"arguments"`
+}
+
+type Usage struct {
+	PromptTokens     int `json:"prompt_tokens"`
+	CompletionTokens int `json:"completion_tokens"`
+	TotalTokens      int `json:"total_tokens"`
+}
+
 const apiURL = "https://api.openai.com/v1/chat/completions"
 
-func (client GPT) NewChatCompletion(prompt string, model string, function ...GPTFunction) (response string, err error) {
+func (client GPT) NewChatCompletion(prompt string, model string, function ...GPTFunction) (response Response, err error) {
 	payload := Payload{
 		Messages: []Message{
 			{
@@ -75,6 +109,7 @@ func (client GPT) NewChatCompletion(prompt string, model string, function ...GPT
 		return
 	}
 
-	response = string(body)
+	json.Unmarshal(body, &response)
+
 	return
 }

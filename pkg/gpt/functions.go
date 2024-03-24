@@ -16,3 +16,8 @@ type GPTModelProperty struct {
 	Type        string `json:"type"`
 	Description string `json:"description"`
 }
+
+const (
+	GPTPropertyTypeString  = "string"
+	GPTPropertyTypeInteger = "integer"
+)
