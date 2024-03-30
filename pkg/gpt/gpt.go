@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// TODO expand
 const (
 	GPT3Dot5Turbo = "gpt-3.5-turbo"
 	GPT4          = "gpt-4"
@@ -72,7 +73,7 @@ type Usage struct {
 
 const apiURL = "https://api.openai.com/v1/chat/completions"
 
-func (client GPT) NewChatCompletion(prompt string, model string, function ...GPTFunction) (response Response, err error) {
+func (client GPT) NewChatCompletion(model string, prompt string, function ...GPTFunction) (response Response, err error) {
 	payload := Payload{
 		Messages: []Message{
 			{
@@ -109,7 +110,8 @@ func (client GPT) NewChatCompletion(prompt string, model string, function ...GPT
 		return
 	}
 
-	json.Unmarshal(body, &response)
+	// TODO: parse error response
+	err = json.Unmarshal(body, &response)
 
 	return
 }

@@ -1,60 +1,75 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
+	"sync"
+	"time"
 
+	"github.com/IraIvanishak/stack_app/data"
 	"github.com/IraIvanishak/stack_app/pkg/gpt"
 )
 
-type Student struct {
-	Name   gpt.GPTModelProperty `json:"name"`
-	Major  gpt.GPTModelProperty `json:"major"`
-	School gpt.GPTModelProperty `json:"school"`
-	Grades gpt.GPTModelProperty `json:"grades"`
-	Club   gpt.GPTModelProperty `json:"club"`
+type VacancyGPT struct {
+	Categories    gpt.GPTModelProperty `json:"categories"`
+	RequiredStack gpt.GPTModelProperty `json:"required_stack"`
+	WelcomeStack  gpt.GPTModelProperty `json:"welcome_stack"`
 }
 
-func main() {
-	api_key := os.Getenv("OPENAI_API_KEY")
-	client := gpt.NewGPT(api_key)
+var client = gpt.NewGPT(os.Getenv("OPENAI_API_KEY"))
 
-	studentFunction := gpt.GPTFunction{
-		Name:        "extract_student_info",
-		Description: "Get the student information from the body of the input text",
+func main() {
+	vacancyInfo := gpt.GPTFunction{
+		Name:        "vacancyInfo",
+		Description: "Get the vacancy information from the body of the input text",
 		Parameters: gpt.GPTFunctionParameter{
 			Type: "object",
-			Properties: Student{
-				Name: gpt.GPTModelProperty{
-					Type:        gpt.GPTPropertyTypeString,
-					Description: "The name of the student",
+			Properties: VacancyGPT{
+				Categories: gpt.GPTModelProperty{
+					Type:        gpt.GPTPropertyTypeArray,
+					Description: "Main tech stack from the title of the text. Don't include level, domain, etc.",
+					Items: &gpt.GPTModelProperty{
+						Type:        gpt.GPTPropertyTypeString,
+						Description: "Tech unit from the title of the text",
+					},
 				},
-				Major: gpt.GPTModelProperty{
-					Type:        gpt.GPTPropertyTypeString,
-					Description: "The major of the student",
+				RequiredStack: gpt.GPTModelProperty{
+					Type:        gpt.GPTPropertyTypeArray,
+					Description: "Required stack of the vacancy from the body of the text",
+					Items: &gpt.GPTModelProperty{
+						Type:        gpt.GPTPropertyTypeString,
+						Description: "Technology unit in standart naming",
+					},
 				},
-				School: gpt.GPTModelProperty{
-					Type:        gpt.GPTPropertyTypeString,
-					Description: "The university name",
-				},
-				Grades: gpt.GPTModelProperty{
-					Type:        gpt.GPTPropertyTypeInteger,
-					Description: "GPA of the student",
-				},
-				Club: gpt.GPTModelProperty{
-					Type:        gpt.GPTPropertyTypeString,
-					Description: "The club the student is part of",
+				WelcomeStack: gpt.GPTModelProperty{
+					Type:        gpt.GPTPropertyTypeArray,
+					Description: "Welcome stack of the vacancy from the body of the text",
+					Items: &gpt.GPTModelProperty{
+						Type:        gpt.GPTPropertyTypeString,
+						Description: "Technology unit in standart naming",
+					},
 				},
 			},
 		},
 	}
 
-	// FROM https://www.datacamp.com/tutorial/open-ai-function-calling-tutorial
-	studentDescription := "David Nguyen is a sophomore majoring in computer science at Stanford University. He is Asian American and has a 3.8 GPA. David is known for his programming skills and is an active member of the university's Robotics Club. He hopes to pursue a career in artificial intelligence after graduating."
+	wg := sync.WaitGroup{}
+	wg.Add(len(data.TestData))
 
-	response, err := client.NewChatCompletion(studentDescription, gpt.GPT4, studentFunction)
-	if err != nil {
-		log.Fatal(err)
+	t1 := time.Now()
+	for _, text := range data.TestData {
+		go func(text string) {
+			defer wg.Done()
+			response, err := client.NewChatCompletion(gpt.GPT4, text, vacancyInfo)
+			if err != nil {
+				fmt.Printf("error: %v", err)
+			}
+			fmt.Println(response.Choices[0].Message.FunctionCall.Arguments)
+		}(text)
 	}
-	log.Println(response.Choices[0].Message.FunctionCall.Arguments)
+
+	wg.Wait()
+	t2 := time.Now()
+	fmt.Println(t2.Sub(t1))
+
 }

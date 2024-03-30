@@ -12,12 +12,16 @@ type GPTFunctionParameter struct {
 
 type GPTFunctionObjectModel interface{}
 
+// TODO expand
 type GPTModelProperty struct {
-	Type        string `json:"type"`
-	Description string `json:"description"`
+	Type        string            `json:"type"`
+	Description string            `json:"description"`
+	Items       *GPTModelProperty `json:"items,omitempty"`
 }
 
+// TODO expand
 const (
 	GPTPropertyTypeString  = "string"
 	GPTPropertyTypeInteger = "integer"
+	GPTPropertyTypeArray   = "array"
 )
