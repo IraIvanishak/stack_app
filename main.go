@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"github.com/IraIvanishak/stack_app/data"
+	"github.com/IraIvanishak/stack_app/model"
 	"github.com/IraIvanishak/stack_app/pkg/gpt"
+	"github.com/IraIvanishak/stack_app/utils"
 )
 
 type VacancyGPT struct {
@@ -16,7 +18,7 @@ type VacancyGPT struct {
 	WelcomeStack  gpt.GPTModelProperty `json:"welcome_stack"`
 }
 
-var client = gpt.NewGPT(os.Getenv("OPENAI_API_KEY"))
+var client = gpt.NewGPT(os.Getenv("OPENAI_API_KEY"), gpt.GPT3Dot5Turbo)
 
 func main() {
 	vacancyInfo := gpt.GPTFunction{
@@ -56,15 +58,21 @@ func main() {
 	wg := sync.WaitGroup{}
 	wg.Add(len(data.TestData))
 
+	vacancies := make([]model.Vacancy, len(data.TestData))
+
 	t1 := time.Now()
-	for _, text := range data.TestData {
+	for i, text := range data.TestData {
 		go func(text string) {
 			defer wg.Done()
-			response, err := client.NewChatCompletion(gpt.GPT4, text, vacancyInfo)
+
+			vacancy := model.Vacancy{}
+
+			err := client.NewChatCompletion(text, &vacancy, vacancyInfo)
 			if err != nil {
 				fmt.Printf("error: %v", err)
 			}
-			fmt.Println(response.Choices[0].Message.FunctionCall.Arguments)
+
+			vacancies[i] = vacancy
 		}(text)
 	}
 
@@ -72,4 +80,5 @@ func main() {
 	t2 := time.Now()
 	fmt.Println(t2.Sub(t1))
 
+	utils.PrintVacanciesTable(vacancies)
 }

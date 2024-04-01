@@ -16,12 +16,14 @@ const (
 type GPT struct {
 	ApiKey     string
 	HttpClient *http.Client
+	Model      string
 }
 
-func NewGPT(apiKey string) *GPT {
+func NewGPT(apiKey string, model string) *GPT {
 	return &GPT{
 		ApiKey:     apiKey,
 		HttpClient: &http.Client{},
+		Model:      model,
 	}
 }
 
@@ -73,7 +75,7 @@ type Usage struct {
 
 const apiURL = "https://api.openai.com/v1/chat/completions"
 
-func (client GPT) NewChatCompletion(model string, prompt string, function ...GPTFunction) (response Response, err error) {
+func (client GPT) NewChatCompletion(prompt string, object interface{}, function ...GPTFunction) (err error) {
 	payload := Payload{
 		Messages: []Message{
 			{
@@ -81,7 +83,7 @@ func (client GPT) NewChatCompletion(model string, prompt string, function ...GPT
 				Content: prompt,
 			},
 		},
-		Model:        model,
+		Model:        client.Model,
 		Functions:    function,
 		FunctionCall: "auto",
 	}
@@ -111,7 +113,12 @@ func (client GPT) NewChatCompletion(model string, prompt string, function ...GPT
 	}
 
 	// TODO: parse error response
+	var response Response
 	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal([]byte(response.Choices[0].Message.FunctionCall.Arguments), object)
 
 	return
 }
