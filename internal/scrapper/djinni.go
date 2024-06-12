@@ -47,6 +47,7 @@ type Job struct {
 	Salary      string
 	Description string
 	DetailsURL  string
+	Category    string
 }
 
 func Scrap() []Job {
@@ -55,6 +56,8 @@ func Scrap() []Job {
 	)
 
 	var jobs []Job
+	page := 1
+	baseURL := "https://djinni.co/jobs/?primary_keyword=Golang&page="
 
 	// Find and visit all job listings
 	c.OnHTML(".job-list-item", func(e *colly.HTMLElement) {
@@ -63,6 +66,7 @@ func Scrap() []Job {
 		location := strings.TrimSpace(e.ChildText(".location-text"))
 		salary := e.ChildText(".public-salary-item")
 		detailsURL := e.ChildAttr(".job-list-item__title a", "href")
+		category := e.ChildText(".job-list-item__info a[href*='primary_keyword']")
 
 		job := Job{
 			Title:      title,
@@ -70,14 +74,19 @@ func Scrap() []Job {
 			Location:   location,
 			Salary:     salary,
 			DetailsURL: "https://djinni.co" + detailsURL,
+			Category:   category,
 		}
 		jobs = append(jobs, job)
 	})
 
-	// Paginate to the next page
-	c.OnHTML(".pagination li.next a", func(e *colly.HTMLElement) {
-		nextPage := e.Attr("href")
-		c.Visit(e.Request.AbsoluteURL(nextPage))
+	// Check if there is a next page
+	c.OnHTML("ul.pagination", func(e *colly.HTMLElement) {
+		if e.DOM.Find("li.page-item a.page-link").Length() > 0 {
+			page++
+			nextPageURL := fmt.Sprintf("%s%d", baseURL, page)
+			fmt.Println("Visiting next page:", nextPageURL)
+			c.Visit(nextPageURL)
+		}
 	})
 
 	// Set error handler
@@ -86,7 +95,7 @@ func Scrap() []Job {
 	})
 
 	// Start scraping
-	c.Visit("https://djinni.co/jobs/?primary_keyword=Golang")
+	c.Visit(baseURL + "1")
 
 	c.Wait()
 
