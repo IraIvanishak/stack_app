@@ -1,0 +1,46 @@
+version: '3.9'
+
+volumes:
+  stack_db_data:
+  stack_pgadmin_data:
+
+services:
+  stack_database:
+    image: postgres:alpine
+    container_name: stack_database
+    restart: unless-stopped
+    volumes:
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - stack_db_data:/var/lib/postgresql/data
+    ports:
+      - ${DB_PORT}:5432
+    expose:
+      - 5432
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USERNAME}
+      SCHEMA: public
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  stack_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    image: stack_api_bin
+    container_name: stack_api
+    ports:
+      - ${PUBLIC_PORT}:${LISTEN_PORT}
+    expose:
+      - ${PUBLIC_PORT}
+    pid: "host"
+    command: air
+    depends_on:
+      - stack_database
+    volumes:
+      - .:/go/src/app
