@@ -3,6 +3,7 @@ package gpt
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -93,6 +94,8 @@ func (client GPT) NewChatCompletion(prompt string, object interface{}, function 
 		return
 	}
 
+	fmt.Println(string(payloadBytes))
+
 	req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(payloadBytes))
 	if err != nil {
 		return
@@ -101,8 +104,10 @@ func (client GPT) NewChatCompletion(prompt string, object interface{}, function 
 	req.Header.Set("Authorization", "Bearer "+client.ApiKey)
 	req.Header.Set("Content-Type", "application/json")
 
+	fmt.Println("Calling GPT-3.5 Turbo...")
 	resp, err := client.HttpClient.Do(req)
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 	defer resp.Body.Close()
@@ -116,9 +121,13 @@ func (client GPT) NewChatCompletion(prompt string, object interface{}, function 
 	var response Response
 	err = json.Unmarshal(body, &response)
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 	err = json.Unmarshal([]byte(response.Choices[0].Message.FunctionCall.Arguments), object)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	return
 }

@@ -1,16 +1,13 @@
 package model
 
 type Vacancy struct {
-	Categories    []string `json:"categories"`
-	RequiredStack []string `json:"required_stack"`
-	WelcomeStack  []string `json:"welcome_stack"`
+	Text          string   `json:"text"`
+	Category      string   `json:"category"`
+	RequiredStack []string `json:"required_stack,omitempty"`
+	WelcomeStack  []string `json:"welcome_stack,omitempty"`
 }
 
 // {
-// 	"categories": [ //з тайтлу
-// 	  "React",
-// 	  "Node"
-// 	],
 // 	"required_stack": [
 // 	  "JS",
 // 	  "React",

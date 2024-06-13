@@ -42,9 +42,6 @@ func Read() ([]Vacancy, error) {
 
 type Job struct {
 	Title       string
-	Company     string
-	Location    string
-	Salary      string
 	Description string
 	DetailsURL  string
 	Category    string
@@ -57,22 +54,16 @@ func Scrap() []Job {
 
 	var jobs []Job
 	page := 1
-	baseURL := "https://djinni.co/jobs/?primary_keyword=Golang&page="
+	baseURL := "https://djinni.co/jobs/?primary_keyword=Scala&page="
 
 	// Find and visit all job listings
 	c.OnHTML(".job-list-item", func(e *colly.HTMLElement) {
 		title := e.ChildText(".job-list-item__title a")
-		company := e.ChildText(".job-list-item__pic + a")
-		location := strings.TrimSpace(e.ChildText(".location-text"))
-		salary := e.ChildText(".public-salary-item")
 		detailsURL := e.ChildAttr(".job-list-item__title a", "href")
 		category := e.ChildText(".job-list-item__info a[href*='primary_keyword']")
 
 		job := Job{
 			Title:      title,
-			Company:    company,
-			Location:   location,
-			Salary:     salary,
 			DetailsURL: "https://djinni.co" + detailsURL,
 			Category:   category,
 		}

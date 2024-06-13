@@ -21,6 +21,7 @@ type GPTModelProperty struct {
 
 // TODO expand
 const (
+	GPTPropertyTypeObject  = "object"
 	GPTPropertyTypeString  = "string"
 	GPTPropertyTypeInteger = "integer"
 	GPTPropertyTypeArray   = "array"

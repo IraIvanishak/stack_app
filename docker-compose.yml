@@ -13,6 +13,8 @@ services:
       target: dev
     image: stack_api_bin
     container_name: stack_api
+    env_file:
+      - .env
     ports:
       - ${PUBLIC_PORT}:${LISTEN_PORT}
     expose:
