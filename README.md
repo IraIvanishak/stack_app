@@ -5,5 +5,6 @@ Work for NULP PZ
 Demo
 
 
-![зображення](https://github.com/IraIvanishak/stack_app/assets/110106748/21b33ba1-7c6f-40cb-a00a-38b9454207b0)
+
+![зображення](https://github.com/IraIvanishak/stack_app/assets/110106748/8a358502-6a42-4e18-ab3b-9e3970c12b43)
 
